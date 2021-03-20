@@ -4,6 +4,8 @@
 
 ## Implemented APIs
 - [ ] incidents
+  - [x] POST (create incident using v2)
+  - [ ] others
 - [ ] schedules
 - [ ] services
   - [x] GET
