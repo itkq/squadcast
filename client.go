@@ -135,6 +135,10 @@ func (c *Client) doAPIRequest(ctx context.Context, params *requestParams, out in
 		return err
 	}
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
 	if err := decodeBodyJSON(resp, &out); err != nil {
 		return err
 	}
@@ -143,7 +147,7 @@ func (c *Client) doAPIRequest(ctx context.Context, params *requestParams, out in
 }
 
 func (c *Client) authenticate(ctx context.Context) error {
-	if c.accessToken == nil || c.accessToken.IsExpired() {
+	if c.accessToken.AccessToken == "" || c.accessToken.IsExpired() {
 		accessToken, err := c.getAccessToken(ctx)
 		if err != nil {
 			return nil
@@ -168,6 +172,10 @@ func (c *Client) getAccessToken(ctx context.Context) (*AccessToken, error) {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	var accessTokenResponse AccessTokenResponse
