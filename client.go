@@ -40,21 +40,6 @@ type AccessTokenResponse struct {
 	AccessToken AccessToken `json:"data"`
 }
 
-type Service struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	// More fields ...
-}
-
-type ServicesResponse struct {
-	Services []*Service `json:"data"`
-}
-
-type ServiceResponse struct {
-	Service *Service `json:"data"`
-}
-
 func NewDefaultClient(refreshToken string) (*Client, error) {
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -73,50 +58,23 @@ func NewDefaultClient(refreshToken string) (*Client, error) {
 	}, nil
 }
 
-// https://apidocs.squadcast.com/#abb07c8a-d547-46eb-88f1-19378314ec4e
-func (c *Client) GetAllServices(ctx context.Context) ([]*Service, error) {
-	params := &requestParams{
-		method: "GET",
-		subPath: "/services",
-	}
-
-	var servicesResponse ServicesResponse
-	if err := c.doAPIRequest(ctx, params, &servicesResponse); err != nil {
+func NewTestClient(endpoint string) (*Client, error) {
+	logger, err := zap.NewProduction()
+	if err != nil {
 		return nil, err
 	}
 
-	return servicesResponse.Services, nil
-}
+	u, _ := url.Parse(endpoint)
 
-// https://apidocs.squadcast.com/#abb07c8a-d547-46eb-88f1-19378314ec4e
-func (c *Client) GetServiceByName(ctx context.Context, name string) (*Service, error) {
-	params := &requestParams{
-		method: "GET",
-		subPath: "/services",
-		queries: map[string]string{"name": name},
-	}
-
-	var serviceResponse ServiceResponse
-	if err := c.doAPIRequest(ctx, params, &serviceResponse); err != nil {
-		return nil, err
-	}
-
-	return serviceResponse.Service, nil
-}
-
-// https://apidocs.squadcast.com/#b9722ea8-f97d-4017-b5b0-80986d1ae654
-func (c *Client) GetServiceByID(ctx context.Context, id string) (*Service, error) {
-	params := &requestParams{
-		method: "GET",
-		subPath: fmt.Sprintf("/services/%s", id),
-	}
-
-	var serviceResponse ServiceResponse
-	if err := c.doAPIRequest(ctx, params, &serviceResponse); err != nil {
-		return nil, err
-	}
-
-	return serviceResponse.Service, nil
+	return &Client{
+		url:        u,
+		httpClient: &http.Client{},
+		logger:     logger,
+		accessToken: &AccessToken{
+			AccessToken: "dummy",
+			ExpiresAt:   time.Now().Add(time.Hour).Unix(),
+		},
+	}, nil
 }
 
 func (c *Client) doAPIRequest(ctx context.Context, params *requestParams, out interface{}) error {
@@ -160,7 +118,7 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 func (c *Client) getAccessToken(ctx context.Context) (*AccessToken, error) {
 	params := &requestParams{
-		method: "GET",
+		method:  "GET",
 		subPath: "/oauth/access-token",
 	}
 	req, err := c.newRequest(ctx, params)
@@ -192,10 +150,10 @@ func decodeBodyJSON(resp *http.Response, out interface{}) error {
 }
 
 type requestParams struct {
-	method string
+	method  string
 	subPath string
 	queries map[string]string
-	body io.Reader
+	body    io.Reader
 }
 
 func (c *Client) newRequest(ctx context.Context, params *requestParams) (*http.Request, error) {

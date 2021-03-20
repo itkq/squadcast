@@ -1,0 +1,19 @@
+{
+  "data": {
+    "id": "5e8edb24668e003cb0b18ba1",
+    "name": "Payment API Service",
+    "slug": "payment-api-service",
+    "email": "unique_string@gopherhut.incidents.squadcast.com",
+    "escalation_policy_id": "5d81d9407000fb6b9def7e33",
+    "organization_id": "5d81d9187000fb6b9def7e32",
+    "api_key": "2f81ac8b2362990dd220f8bb4f7cd30ccc3dac43",
+    "description": "Payment API Service monitor",
+    "depends": null,
+    "escalation_policy": {
+      "id": "5d81d9407000fb6b9def7e33",
+      "name": "Example Escalation Policy",
+      "description": "On-Boarding Example",
+      "slug": "example-escalation-policy"
+    }
+  }
+}
