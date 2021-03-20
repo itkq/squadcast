@@ -51,6 +51,10 @@ type ServicesResponse struct {
 	Services []*Service `json:"data"`
 }
 
+type ServiceResponse struct {
+	Service *Service `json:"data"`
+}
+
 func NewDefaultClient(refreshToken string) (*Client, error) {
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -69,6 +73,7 @@ func NewDefaultClient(refreshToken string) (*Client, error) {
 	}, nil
 }
 
+// https://apidocs.squadcast.com/#abb07c8a-d547-46eb-88f1-19378314ec4e
 func (c *Client) GetAllServices(ctx context.Context) ([]*Service, error) {
 	params := &requestParams{
 		method: "GET",
@@ -81,6 +86,37 @@ func (c *Client) GetAllServices(ctx context.Context) ([]*Service, error) {
 	}
 
 	return servicesResponse.Services, nil
+}
+
+// https://apidocs.squadcast.com/#abb07c8a-d547-46eb-88f1-19378314ec4e
+func (c *Client) GetServiceByName(ctx context.Context, name string) (*Service, error) {
+	params := &requestParams{
+		method: "GET",
+		subPath: "/services",
+		queries: map[string]string{"name": name},
+	}
+
+	var serviceResponse ServiceResponse
+	if err := c.doAPIRequest(ctx, params, &serviceResponse); err != nil {
+		return nil, err
+	}
+
+	return serviceResponse.Service, nil
+}
+
+// https://apidocs.squadcast.com/#b9722ea8-f97d-4017-b5b0-80986d1ae654
+func (c *Client) GetServiceByID(ctx context.Context, id string) (*Service, error) {
+	params := &requestParams{
+		method: "GET",
+		subPath: fmt.Sprintf("/services/%s", id),
+	}
+
+	var serviceResponse ServiceResponse
+	if err := c.doAPIRequest(ctx, params, &serviceResponse); err != nil {
+		return nil, err
+	}
+
+	return serviceResponse.Service, nil
 }
 
 func (c *Client) doAPIRequest(ctx context.Context, params *requestParams, out interface{}) error {
@@ -150,6 +186,7 @@ func decodeBodyJSON(resp *http.Response, out interface{}) error {
 type requestParams struct {
 	method string
 	subPath string
+	queries map[string]string
 	body io.Reader
 }
 
@@ -161,6 +198,12 @@ func (c *Client) newRequest(ctx context.Context, params *requestParams) (*http.R
 	if err != nil {
 		return nil, err
 	}
+
+	q := req.URL.Query()
+	for k, v := range params.queries {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
 
 	return req, nil
 }
