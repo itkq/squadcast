@@ -70,20 +70,25 @@ func NewDefaultClient(refreshToken string) (*Client, error) {
 }
 
 func (c *Client) GetAllServices(ctx context.Context) ([]*Service, error) {
+	params := &requestParams{
+		method: "GET",
+		subPath: "/services",
+	}
+
 	var servicesResponse ServicesResponse
-	if err := c.doAPIRequest(ctx, "GET", "/services", nil, &servicesResponse); err != nil {
+	if err := c.doAPIRequest(ctx, params, &servicesResponse); err != nil {
 		return nil, err
 	}
 
 	return servicesResponse.Services, nil
 }
 
-func (c *Client) doAPIRequest(ctx context.Context, method, spath string, body io.Reader, iface interface{}) error {
+func (c *Client) doAPIRequest(ctx context.Context, params *requestParams, out interface{}) error {
 	if err := c.authenticate(ctx); err != nil {
 		return err
 	}
 
-	req, err := c.newRequest(ctx, method, spath, body)
+	req, err := c.newRequest(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -94,7 +99,7 @@ func (c *Client) doAPIRequest(ctx context.Context, method, spath string, body io
 		return err
 	}
 
-	if err := decodeBodyJSON(resp, &iface); err != nil {
+	if err := decodeBodyJSON(resp, &out); err != nil {
 		return err
 	}
 
@@ -114,7 +119,11 @@ func (c *Client) authenticate(ctx context.Context) error {
 }
 
 func (c *Client) getAccessToken(ctx context.Context) (*AccessToken, error) {
-	req, err := c.newRequest(ctx, "GET", "/oauth/access-token", nil)
+	params := &requestParams{
+		method: "GET",
+		subPath: "/oauth/access-token",
+	}
+	req, err := c.newRequest(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -138,11 +147,17 @@ func decodeBodyJSON(resp *http.Response, out interface{}) error {
 	return json.NewDecoder(resp.Body).Decode(out)
 }
 
-func (c *Client) newRequest(ctx context.Context, method, spath string, body io.Reader) (*http.Request, error) {
-	u := *c.url
-	u.Path = path.Join(c.url.Path, spath)
+type requestParams struct {
+	method string
+	subPath string
+	body io.Reader
+}
 
-	req, err := http.NewRequest(method, u.String(), body)
+func (c *Client) newRequest(ctx context.Context, params *requestParams) (*http.Request, error) {
+	u := *c.url
+	u.Path = path.Join(c.url.Path, params.subPath)
+
+	req, err := http.NewRequest(params.method, u.String(), params.body)
 	if err != nil {
 		return nil, err
 	}
