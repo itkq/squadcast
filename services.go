@@ -10,6 +10,7 @@ type Service struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	APIKey      string `json:"api_key"`
+	Slug        string `json:"slug"`
 	// More fields ...
 }
 
@@ -24,7 +25,7 @@ type ServiceResponse struct {
 // https://apidocs.squadcast.com/#abb07c8a-d547-46eb-88f1-19378314ec4e
 func (c *Client) GetAllServices(ctx context.Context) ([]*Service, error) {
 	params := &requestParams{
-		method: "GET",
+		method:  "GET",
 		subPath: "/services",
 	}
 
@@ -39,7 +40,7 @@ func (c *Client) GetAllServices(ctx context.Context) ([]*Service, error) {
 // https://apidocs.squadcast.com/#abb07c8a-d547-46eb-88f1-19378314ec4e
 func (c *Client) GetServiceByName(ctx context.Context, name string) (*Service, error) {
 	params := &requestParams{
-		method: "GET",
+		method:  "GET",
 		subPath: "/services",
 		queries: map[string]string{"name": name},
 	}
@@ -55,7 +56,7 @@ func (c *Client) GetServiceByName(ctx context.Context, name string) (*Service, e
 // https://apidocs.squadcast.com/#b9722ea8-f97d-4017-b5b0-80986d1ae654
 func (c *Client) GetServiceByID(ctx context.Context, id string) (*Service, error) {
 	params := &requestParams{
-		method: "GET",
+		method:  "GET",
 		subPath: fmt.Sprintf("/services/%s", id),
 	}
 

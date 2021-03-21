@@ -27,6 +27,6 @@ func main() {
 	}
 
 	for _, service := range services {
-		fmt.Println(service.Name)
+		fmt.Printf("%+v\n", service)
 	}
 }
