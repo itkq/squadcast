@@ -41,9 +41,9 @@ func NewTestWebhookClient(endpoint string, apiKey string) *WebhookClient {
 }
 
 type PostIncidentRequest struct {
-	Message     string
-	Description string
-	Status      string
+	Message     string `json:"message"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
 	// more fields ...
 }
 
